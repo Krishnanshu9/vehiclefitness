@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Vehicle Fitness Certificate System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/auth.js"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+  <header class="bg-blue-700 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Fitness Certificate System</h1>
+      <nav class="flex items-center gap-4">
+        <span id="userName" class="font-medium"></span>
+        <button id="logout-btn" class="bg-red-500 px-4 py-2 rounded hover:bg-red-600">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto mt-8 p-4">
+    <div class="flex justify-between items-center mb-8">
+      <h2 class="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+      <a href="apply.html" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+        New Application
+      </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white shadow p-6 rounded-xl text-center">
+        <h4 class="text-gray-500">Total Applications</h4>
+        <p id="total-applications" class="text-3xl font-bold text-blue-700">0</p>
+      </div>
+    </div>
+
+    <!-- Recent Applications Table -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden p-4 mb-8">
+      <h3 class="text-lg font-bold mb-4">Recent Applications</h3>
+      <div id="recent-applications"></div>
+    </div>
+
+    <!-- Expiring Certificates -->
+    <div class="mt-8 bg-white rounded-xl shadow-md p-6">
+      <h3 class="text-lg font-bold mb-4">Expiring Certificates</h3>
+      <div id="expiring-certificates"></div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      document.getElementById('userName').textContent =
+        `Welcome, ${localStorage.getItem('userName') || 'User'}`;
+
+      await loadDashboardData();
+
+      document.getElementById('logout-btn').addEventListener('click', logout);
+    });
+
+    async function loadDashboardData() {
+      try {
+        const response = await fetch('/api/dashboard', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('recent-applications').innerHTML = renderRecentApplications(data.recentApplications);
+          document.getElementById('expiring-certificates').innerHTML = renderExpiringCertificates(data.expiringCertificates);
+          document.getElementById('total-applications').textContent = data.totalApplications;
+        } else {
+          console.error('Failed to load dashboard data');
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      }
+    }
+
+    function renderRecentApplications(applications) {
+      if (!applications || applications.length === 0) {
+        return '<p class="text-gray-600">No recent applications.</p>';
+      }
+
+      return applications.map(app => `
+        <div class="p-4 border rounded-lg mb-4">
+          <p><strong>Vehicle Number:</strong> ${app.vehicleNumber}</p>
+          <p><strong>Status:</strong> ${app.status}</p>
+          <p><strong>Last Updated:</strong> ${new Date(app.updatedAt).toLocaleString()}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderExpiringCertificates(certificates) {
+      if (!certificates || certificates.length === 0) {
+        return '<p class="text-gray-600">No expiring certificates.</p>';
+      }
+
+      return certificates.map(cert => `
+        <div class="p-4 border rounded-lg mb-4">
+          <p><strong>Vehicle Number:</strong> ${cert.vehicleNumber}</p>
+          <p><strong>Expiry Date:</strong> ${new Date(cert.expiryDate).toLocaleDateString()}</p>
+        </div>
+      `).join('');
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+  </script>
+
+</body>
+</html>

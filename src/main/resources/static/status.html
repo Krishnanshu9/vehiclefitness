@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application Status - Fitness Certificate System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/auth.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <header class="bg-blue-700 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold">Application Status</h1>
+      <button id="logout-btn" class="bg-red-500 px-4 py-2 rounded hover:bg-red-600">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <main class="container mx-auto mt-10">
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-2xl font-semibold mb-6 text-blue-700">Your Applications</h2>
+
+      <div id="statusList" class="space-y-4">
+        <p class="text-gray-600">Loading...</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function fetchStatus() {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const response = await fetch('/api/status', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+
+      const container = document.getElementById('statusList');
+      container.innerHTML = '';
+
+      if (response.ok) {
+        const applications = await response.json();
+
+        if (applications.length === 0) {
+          container.innerHTML = '<p class="text-gray-600">No applications found.</p>';
+          return;
+        }
+
+        applications.forEach(app => {
+          const statusCard = document.createElement('div');
+          statusCard.className = "border rounded-lg p-4 shadow";
+
+          statusCard.innerHTML = `
+            <p><strong>Vehicle Number:</strong> ${app.vehicleNumber}</p>
+            <p><strong>Chassis Number:</strong> ${app.chassisNumber}</p>
+            <p><strong>Status:</strong> 
+              <span class="font-semibold ${app.status === 'APPROVED' ? 'text-green-600' : app.status === 'REJECTED' ? 'text-red-600' : 'text-yellow-600'}">
+                ${app.status}
+              </span>
+            </p>
+            <p><strong>Last Updated:</strong> ${new Date(app.updatedAt).toLocaleString()}</p>
+          `;
+
+          container.appendChild(statusCard);
+        });
+      } else {
+        container.innerHTML = '<p class="text-red-600">Failed to load status. Please try again.</p>';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userName');
+      window.location.href = 'login.html';
+    }
+
+    fetchStatus();
+  </script>
+  <script type="module">
+    import { initializeAuth } from './auth.js';
+    document.addEventListener('DOMContentLoaded', initializeAuth);
+  </script>
+</body>
+</html>

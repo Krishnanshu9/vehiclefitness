@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Vehicle Fitness Certificate System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/auth.js"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+  <header class="bg-blue-700 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Fitness Certificate System</h1>
+      <nav>
+        <a href="index.html" class="mr-4 hover:underline font-bold">Home</a>
+        <a href="login.html" class="mr-4 hover:underline font-bold">Login</a>
+        <a href="register.html" class="hover:underline">Register</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto mt-10 max-w-md">
+    <div class="bg-white p-8 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+
+      <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+        <p id="error-text"></p>
+      </div>
+
+      <form id="login-form">
+        <div class="mb-4">
+          <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+          <input type="email" id="email" name="email"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required>
+        </div>
+
+        <div class="mb-6">
+          <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+          <input type="password" id="password" name="password"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <button type="submit"
+            class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Login
+          </button>
+          <a href="#" class="inline-block align-baseline font-bold text-sm text-blue-700 hover:text-blue-800">
+            Forgot Password?
+          </a>
+        </div>
+      </form>
+
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-600">Don't have an account?
+          <a href="register.html" class="font-bold text-blue-700 hover:text-blue-800">Register</a>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      };
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Store the token and user data in localStorage
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('userEmail', data.email);
+          localStorage.setItem('userName', data.fullName || data.name || 'User');
+
+          // Redirect to dashboard
+          window.location.href = 'dashboard.html';
+        } else {
+          document.getElementById('error-text').textContent = data.message || 'Login failed. Please try again.';
+          document.getElementById('error-message').classList.remove('hidden');
+        }
+      } catch (error) {
+        document.getElementById('error-text').textContent = 'An error occurred. Please try again later.';
+        document.getElementById('error-message').classList.remove('hidden');
+      }
+    });
+  </script>
+
+</body>
+
+</html>

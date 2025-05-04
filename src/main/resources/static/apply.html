@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apply for Fitness Certificate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- load auth.js after the markup -->
+  <script src="/js/auth.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="bg-blue-700 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Fitness Certificate System</h1>
+      <nav class="flex items-center gap-4">
+        <span id="userName" class="font-medium"></span>
+        <button id="logout-btn"
+                class="bg-red-500 px-4 py-2 rounded hover:bg-red-600">
+          Logout
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto mt-10">
+    <div class="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto">
+      <h2 class="text-2xl font-semibold mb-6 text-blue-700">Application Form</h2>
+
+      <form id="applicationForm" class="space-y-4">
+        <div>
+          <label for="vehicleNumber" class="block text-gray-700 mb-1 font-medium">
+            Vehicle Number
+          </label>
+          <input type="text" id="vehicleNumber" required
+                 class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <div>
+          <label for="chassisNumber" class="block text-gray-700 mb-1 font-medium">
+            Chassis Number
+          </label>
+          <input type="text" id="chassisNumber" required
+                 class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <div>
+          <label for="registrationDate" class="block text-gray-700 mb-1 font-medium">
+            Registration Date
+          </label>
+          <input type="date" id="registrationDate" required
+                 class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <div>
+          <label for="documentUrl" class="block text-gray-700 mb-1 font-medium">
+            Document URL
+          </label>
+          <input type="url" id="documentUrl" placeholder="https://example.com/your-doc"
+                 class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <button type="submit"
+                class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition">
+          Submit Application
+        </button>
+
+        <p id="statusMessage" class="mt-4 text-center text-green-600 hidden">
+          Application submitted successfully!
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Show current user's name
+      const user = AuthHelper.getCurrentUser();
+      document.getElementById('userName').textContent = user.fullName || 'User';
+
+      // Form submission
+      const form = document.getElementById('applicationForm');
+      const msg  = document.getElementById('statusMessage');
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        msg.classList.add('hidden');
+
+        const payload = {
+          vehicleNumber:    form.vehicleNumber.value,
+          chassisNumber:    form.chassisNumber.value,
+          registrationDate: form.registrationDate.value,
+          documentUrl:      form.documentUrl.value
+        };
+
+        try {
+          const res = await AuthHelper.authFetch('/api/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            msg.classList.remove('hidden');
+            form.reset();
+            setTimeout(() => window.location.href = 'status.html', 1500);
+          } else {
+            const err = await res.json();
+            alert(err.message || 'Submission failed');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error submitting application');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
